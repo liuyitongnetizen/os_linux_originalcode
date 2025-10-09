@@ -13,15 +13,15 @@
  */
 .text
 .globl _idt,_gdt,_pg_dir,_tmp_floppy_area
-_pg_dir:
-startup_32:
-	movl $0x10,%eax
-	mov %ax,%ds
+_pg_dir:// 页表目录
+startup_32:// 现在是保护模式
+	movl $0x10,%eax // 0x10 = 0001 0000(b) = 特权级0,GDT, 第3项,(背: Ox10内核数据段,Ox08内核代码段)
+	mov %ax,%ds // ds指向内核数据段,四个段对齐
 	mov %ax,%es
 	mov %ax,%fs
 	mov %ax,%gs
-	lss _stack_start,%esp
-	call setup_idt
+	lss _stack_start,%esp // 汇编中带下划线,去掉跟C语言内容相通,栈指针得到
+	call setup_idt	// idt替代中断向量表, 中断描述符表
 	call setup_gdt
 	movl $0x10,%eax		# reload all the segment registers
 	mov %ax,%ds		# after changing gdt. CS was already
@@ -144,6 +144,7 @@ L6:
 				# just in case, we know what happens.
 
 /* This is the default interrupt "handler" :-) */
+// 在整个保护模式建立过程中, 如果遇到中断, 先统一一个值, 不然没有响应
 int_msg:
 	.asciz "Unknown interrupt\n\r"
 .align 2
@@ -219,7 +220,9 @@ setup_paging:
 
 .align 2
 .word 0
-idt_descr:
+// 实模式: 中断向量 到 中断服务程序
+// 保护模式: CPU中idtR找idt, 找idt找描述符, 指向中断服务程序, 首先统一一个中端服务程序(所有都能跳到这,叫Ignore_int)
+idt_descr: //idt表
 	.word 256*8-1		# idt contains 256 entries
 	.long _idt
 .align 2

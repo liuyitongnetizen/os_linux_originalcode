@@ -41,7 +41,7 @@ ENDSEG   = SYSSEG + SYSSIZE		! where to stop loading
 ! ROOT_DEV:	0x000 - same type of floppy as boot.
 !		0x301 - first partition on first drive etc
 ROOT_DEV = 0x306
-
+// bios 
 entry start
 start:
 	mov	ax,#BOOTSEG
@@ -63,7 +63,7 @@ go:	mov	ax,cs
 
 ! load the setup-sectors directly after the bootblock.
 ! Note that 'es' is already set up.
-
+// 4 section
 load_setup:
 	mov	dx,#0x0000		! drive 0, head 0
 	mov	cx,#0x0002		! sector 2, track 0
@@ -135,7 +135,7 @@ root_defined:
 ! after that (everyting loaded), we jump to
 ! the setup-routine loaded directly after
 ! the bootblock:
-
+// 90200+0 setup.s entry
 	jmpi	0,SETUPSEG
 
 ! This routine loads the system at address 0x10000, making sure
