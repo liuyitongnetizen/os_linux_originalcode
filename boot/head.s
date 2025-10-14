@@ -13,10 +13,10 @@
  */
 .text
 .globl _idt,_gdt,_pg_dir,_tmp_floppy_area
-_pg_dir:// 页表目录
+_pg_dir:// 页目录表, head.s现在在内存最前面, 在0x00000位置
 startup_32:// 现在是保护模式
-	movl $0x10,%eax // 0x10 = 0001 0000(b) = 特权级0,GDT, 第3项,(背: Ox10内核数据段,Ox08内核代码段)
-	mov %ax,%ds // ds指向内核数据段,四个段对齐
+	movl $0x10,%eax // 0x10 = 0001 0000(b) = 00:特权级0,0:GDT, 010:第3项,(背: Ox10内核数据段,Ox08内核代码段)
+	mov %ax,%ds // ds指向内核数据段,四个段对齐, ax是eax低位 !!!!自己算 _gdt ds 0x10 基址,长度,特权级,代码or数据
 	mov %ax,%es
 	mov %ax,%fs
 	mov %ax,%gs
@@ -33,7 +33,7 @@ startup_32:// 现在是保护模式
 1:	incl %eax		# check that A20 really IS enabled
 	movl %eax,0x000000	# loop forever if it isn't
 	cmpl %eax,0x100000
-	je 1b
+	je 1b // 1 是33,b是往前找,是循环,f往后找1;  这段比较0位置和1M位置,相同,类似补码回滚, A20打开则相同,没打开是不相同
 /*
  * NOTE! 486 should set bit 16, to check for write-protect in supervisor
  * mode. Then it would be unnecessary with the "verify_area()"-calls.
@@ -74,10 +74,11 @@ check_x87:
  *  are enabled elsewhere, when we can be relatively
  *  sure everything is ok. This routine will be over-
  *  written by the page tables.
+ *  irq中断请求->CPU idtR->idt 表项,表项是图1-28, 找到基址,偏移-> 找到中断服务程序(目前放ignore_int)
  */
 setup_idt:
-	lea ignore_int,%edx
-	movl $0x00080000,%eax
+	lea ignore_int,%edx   // ignore_int 是未知中断,所有中断具体可能没写完前的默认提示
+	movl $0x00080000,%eax //看图1-28, 保留0-32,为了兼容以前中断, 现在是保护模式位数增加, 因此增加图上面两行打补丁;中断描述符表暗含链接GDT
 	movw %dx,%ax		/* selector = 0x0008 = cs */
 	movw $0x8E00,%dx	/* interrupt gate - dpl=0, present */
 
@@ -103,7 +104,7 @@ rp_sidt:
  *  This routine will beoverwritten by the page tables.
  */
 setup_gdt:
-	lgdt gdt_descr
+	lgdt gdt_descr // gdt_descr起始位
 	ret
 
 /*
@@ -159,8 +160,8 @@ ignore_int:
 	mov %ax,%ds
 	mov %ax,%es
 	mov %ax,%fs
-	pushl $int_msg
-	call _printk
+	pushl $int_msg // 输出参数
+	call _printk //内核状态直接往屏幕输出
 	popl %eax
 	pop %fs
 	pop %es
@@ -168,7 +169,7 @@ ignore_int:
 	popl %edx
 	popl %ecx
 	popl %eax
-	iret
+	iret //interupt return, 上述是中断服务程序
 
 
 /*
@@ -234,8 +235,8 @@ gdt_descr:
 	.align 3
 _idt:	.fill 256,8,0		# idt is uninitialized
 
-_gdt:	.quad 0x0000000000000000	/* NULL descriptor */
-	.quad 0x00c09a0000000fff	/* 16Mb */
-	.quad 0x00c0920000000fff	/* 16Mb */
-	.quad 0x0000000000000000	/* TEMPORARY - don't use */
+_gdt:	.quad 0x0000000000000000	/* 0项: 空? 书上找 NULL descriptor */
+	.quad 0x00c09a0000000fff	/* 0特权代码段 16Mb */
+	.quad 0x00c0920000000fff	/* 0特权数据段 16Mb */
+	.quad 0x0000000000000000	/* 空 与前后隔开,后续是进程   TEMPORARY - don't use */
 	.fill 252,8,0			/* space for LDT's and TSS's etc */

@@ -69,7 +69,7 @@ long user_stack [ PAGE_SIZE>>2 ] ;
 struct {
 	long * a;
 	short b;
-	} stack_start = { & user_stack [PAGE_SIZE>>2] , 0x10 }; // 0x10 内核数据段,why? user_stack用户栈;
+	} stack_start = { & user_stack [PAGE_SIZE>>2] , 0x10 }; // 0x10 内核数据段, why? user_stack用户栈地址,为什么现在是0特权在用, 但是实际是用户在用,后续,右移因为栈倒着走;
 /*
  *  'math_state_restore()' saves the current math information in the
  * old math state array, and gets the new ones from the current task

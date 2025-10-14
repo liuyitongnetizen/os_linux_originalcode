@@ -148,13 +148,13 @@ void main(void)		/* This really IS void, no error here. */
 	for(;;) pause();
 }
 
-static int printf(const char *fmt, ...)
+static int printf(const char *fmt, ...)// 内存写到黑屏, 外设走端口,unix 体系看来是文件, 
 {
 	va_list args;
 	int i;
 
 	va_start(args, fmt);
-	write(1,printbuf,i=vsprintf(printbuf, fmt, args));
+	write(1,printbuf,i=vsprintf(printbuf, fmt, args)); //printk 当前在内核或者文件程序未建立,printf从用户到内核,如果当前在内核,则直接printk
 	va_end(args);
 	return i;
 }
