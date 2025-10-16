@@ -90,7 +90,7 @@ rp_sidt:
 	addl $8,%edi
 	dec %ecx
 	jne rp_sidt
-	lidt idt_descr
+	lidt idt_descr	// idtr指向
 	ret
 
 /*
@@ -138,7 +138,7 @@ after_page_tables:
 	pushl $0
 	pushl $0
 	pushl $L6		# return address for main, if it decides to.
-	pushl $_main
+	pushl $_main    // main函数执行入口地址压栈= 调用main函数,执行jmp 后,返回?
 	jmp setup_paging
 L6:
 	jmp L6			# main should never return here, but
@@ -195,15 +195,23 @@ ignore_int:
  * I've tried to show which constants to change by having
  * some kind of marker at them (search for "16Mb"), but I
  * won't guarantee that's all :-( )
+ *
+ * 分页, 分页机制是CPU硬件规定, 4K页, 线性地址: 页目录项-页表项-页内偏移; 页目录项4字节, 共1k项, 占10位; 页表项4字节,占10位; 10+10+12 =32 (2^32=4G)
+ * 页目录表项 查到页表项需要20位就够了,还剩12bit位(放一些位,如缺页中断),与下文7相关
+ * CR3 指向页目录表地址
+ * 一个页目录表对应一个线性地址空间,需要一个CR3指向页目录表,这叫CR3切换
+ * 用户程序 线性地址; kenel程序 也是指向线性地址, 跑代码寻址全是线性地址,因为0特权是在线性地址上,所以kenel程序也是指向线性地址的
+ * 分页是对于硬件和线性地址都分页, 线性地址算后到物理地址与真实的物理地址一样, 能实现有效内存访问控制
+ * 两个线性页可以是同一个物理地址: 代码段复用 (父进程创建子进程,可以共享或不共享,子进程拿到内存中这个过程必须要父进程,需要映射)有意义
  */
 .align 2
 setup_paging:
-	movl $1024*5,%ecx		/* 5 pages - pg_dir+4 page tables */
+	movl $1024*5,%ecx		/* 5 pages - pg_dir+4 page tables */ // 前4行, 5个页清0
 	xorl %eax,%eax
 	xorl %edi,%edi			/* pg_dir is at 0x000 */
 	cld;rep;stosl
-	movl $pg0+7,_pg_dir		/* set present bit/user r/w */
-	movl $pg1+7,_pg_dir+4		/*  --------- " " --------- */
+	movl $pg0+7,_pg_dir		/* set present bit/user r/w */ // 地址+7 放到页目录表第一个位置(后4个页放到第1个页里,第一个页是页目录表)
+	movl $pg1+7,_pg_dir+4		/*  --------- " " --------- */ // 7含义:
 	movl $pg2+7,_pg_dir+8		/*  --------- " " --------- */
 	movl $pg3+7,_pg_dir+12		/*  --------- " " --------- */
 	movl $pg3+4092,%edi
@@ -213,9 +221,9 @@ setup_paging:
 	subl $0x1000,%eax
 	jge 1b
 	xorl %eax,%eax		/* pg_dir is at 0x0000 */
-	movl %eax,%cr3		/* cr3 - page directory start */
-	movl %cr0,%eax
-	orl $0x80000000,%eax
+	movl %eax,%cr3		/* cr3 - page directory start */ //CR3指定页目录表基址0
+	movl %cr0,%eax //cr0 原来是PE=1
+	orl $0x80000000,%eax //100...001 //不能只打开分页,不打开保护模式
 	movl %eax,%cr0		/* set paging (PG) bit */
 	ret			/* this also flushes prefetch-queue */
 
