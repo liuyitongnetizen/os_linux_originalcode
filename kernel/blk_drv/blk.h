@@ -19,6 +19,7 @@
  * request for paging requests when that is implemented. In
  * paging, 'bh' is NULL, and 'waiting' is used to wait for
  * read/write completion.
+ * 外设读写要走
  */
 struct request {
 	int dev;		/* -1 if no request */
@@ -29,7 +30,7 @@ struct request {
 	char * buffer;
 	struct task_struct * waiting;
 	struct buffer_head * bh;
-	struct request * next;
+	struct request * next;// 链式结构
 };
 
 /*
@@ -42,8 +43,8 @@ struct request {
 ((s1)->dev < (s2)->dev || ((s1)->dev == (s2)->dev && \
 (s1)->sector < (s2)->sector)))
 
-struct blk_dev_struct {
-	void (*request_fn)(void);
+struct blk_dev_struct {//
+	void (*request_fn)(void);//语法
 	struct request * current_request;
 };
 
@@ -61,7 +62,7 @@ extern struct task_struct * wait_for_request;
 #if (MAJOR_NR == 1)
 /* ram disk */
 #define DEVICE_NAME "ramdisk"
-#define DEVICE_REQUEST do_rd_request
+#define DEVICE_REQUEST do_rd_request // 当用MAJOR_NR =1 用这个函数
 #define DEVICE_NR(device) ((device) & 7)
 #define DEVICE_ON(device) 
 #define DEVICE_OFF(device)

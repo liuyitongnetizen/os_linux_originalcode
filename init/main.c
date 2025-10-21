@@ -107,11 +107,18 @@ void main(void)		/* This really IS void, no error here. */
  * Interrupts are still disabled. Do necessary setups, then
  * enable them
  */
- 	ROOT_DEV = ORIG_ROOT_DEV;
- 	drive_info = DRIVE_INFO;
-	memory_end = (1<<20) + (EXT_MEM_K<<10);
+	// 内存布局
+ 	ROOT_DEV = ORIG_ROOT_DEV;// 90000-9020000是机器系统数据区
+ 	drive_info = DRIVE_INFO;// 硬盘参数表
+	memory_end = (1<<20) + (EXT_MEM_K<<10);// 1左移20位是1MB, EXT_MEM_K是扩展内存的KB数
+	/**左移10位变成字节数(早期8086机器,PC机概念提出(IBM兼容机)
+	 * 8086 CPU 20位地址线, 最大1MB寻址空间, 640KB以下是常规内存, 640KB-1MB是系统内存区域(ROM BIOS, 显存, 显卡RAM等), 1MB以上是扩展内存
+	 * 现代PC机, CPU地址线远大于20位, 1MB以上内存都可以使用, 但为了兼容早期PC机, 仍然保留640KB-1MB系统内存区域, 所以1MB以下内存布局仍然遵循早期PC机设计	
+	 * EXT_MEM是扩展内存条大小, 低于1MB的内存是常规内存, 高于1MB的内存是扩展内存, 例如有8MB内存条, 则EXT_MEM约等于7MB,
+	 * 1<< 20 是1MB, EXT_MEM_K<<10是扩展内存字节数, 两者相加就是总内存大小
+	 */
 	memory_end &= 0xfffff000;
-	if (memory_end > 16*1024*1024)
+	if (memory_end > 16*1024*1024)// 针对物理内存条的实际大小, 对内存使用不同的规划, buffer 是指硬盘缓冲区,内存中的空间
 		memory_end = 16*1024*1024;
 	if (memory_end > 12*1024*1024) 
 		buffer_memory_end = 4*1024*1024;
@@ -120,10 +127,10 @@ void main(void)		/* This really IS void, no error here. */
 	else
 		buffer_memory_end = 1*1024*1024;
 	main_memory_start = buffer_memory_end;
-#ifdef RAMDISK
-	main_memory_start += rd_init(main_memory_start, RAMDISK*1024);
+#ifdef RAMDISK // (图:针对物理内存条的实际大小, 对内存使用不同的规划)虚拟盘, 虚拟一个软盘(外设),需要中断,但是内存上没有中断,虚拟盘末端是真正
+	main_memory_start += rd_init(main_memory_start, RAMDISK*1024);// 虚拟盘末端是内存上真正可用内存的起始位置
 #endif
-	mem_init(main_memory_start,memory_end);
+	mem_init(main_memory_start,memory_end);//个人定义16M
 	trap_init();
 	blk_dev_init();
 	chr_dev_init();

@@ -42,9 +42,9 @@ __asm__("movl %%eax,%%cr3"::"a" (0))
 /* these are not to be changed without changing head.s etc */
 #define LOW_MEM 0x100000
 #define PAGING_MEMORY (15*1024*1024)
-#define PAGING_PAGES (PAGING_MEMORY>>12)
+#define PAGING_PAGES (PAGING_MEMORY>>12) //15M=16-1M, exetend memory ,12 是页大小4KB的2次方,15M/4KB=15MB内存的页数
 #define MAP_NR(addr) (((addr)-LOW_MEM)>>12)
-#define USED 100
+#define USED 100 // mem_map 数组中元素值,表示该页已被使用,页的引用计数(被多少进程使用),目的:分配内存(物理内存)看用没有使用,共享内存(进程间通讯 通讯意味共享),100 别动(操作系统最多64个进程,所以引用计数最大64)
 
 #define CODE_SPACE(addr) ((((addr)+4095)&~4095) < \
 current->start_code + current->end_code)
@@ -54,7 +54,7 @@ static long HIGH_MEMORY = 0;
 #define copy_page(from,to) \
 __asm__("cld ; rep ; movsl"::"S" (from),"D" (to),"c" (1024):"cx","di","si")
 
-static unsigned char mem_map [ PAGING_PAGES ] = {0,};
+static unsigned char mem_map [ PAGING_PAGES ] = {0,};//数组元素数 = 页数, 一个元素管理一个页
 
 /*
  * Get physical address of first (actually last :-) free page, and mark it
@@ -401,8 +401,8 @@ void mem_init(long start_mem, long end_mem)
 	int i;
 
 	HIGH_MEMORY = end_mem;
-	for (i=0 ; i<PAGING_PAGES ; i++)
-		mem_map[i] = USED;
+	for (i=0 ; i<PAGING_PAGES ; i++)// 循环了15M内存的页数(15/4KB)
+		mem_map[i] = USED;// mem_map数组每个元素管理一个页, 初始都标记为已用(操作系统总体来管,与页表和页目录表差异是)
 	i = MAP_NR(start_mem);
 	end_mem -= start_mem;
 	end_mem >>= 12;

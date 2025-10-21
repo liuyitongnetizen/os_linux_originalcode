@@ -19,8 +19,14 @@ __asm__ ("movl %%esp,%%eax\n\t" \
 
 #define iret() __asm__ ("iret"::)
 
+// 嵌入汇编 d:edx,32位(田字格好记)带来了地址指针(!!!在IDT那个图和田字格类似哦) a:eax
+/** 
+ * edx低16位(地址低16位) 给eax低16位
+ * %1 是IDT表项地址
+ * 看笔记图
+*/
 #define _set_gate(gate_addr,type,dpl,addr) \
-__asm__ ("movw %%dx,%%ax\n\t" \
+__asm__ ("movw %%dx,%%ax\n\t" \ 
 	"movw %0,%%dx\n\t" \
 	"movl %%eax,%1\n\t" \
 	"movl %%edx,%2" \
@@ -33,6 +39,7 @@ __asm__ ("movw %%dx,%%ax\n\t" \
 #define set_intr_gate(n,addr) \
 	_set_gate(&idt[n],14,0,addr)
 
+//15: f=1111
 #define set_trap_gate(n,addr) \
 	_set_gate(&idt[n],15,0,addr)
 

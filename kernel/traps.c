@@ -178,10 +178,11 @@ void do_reserved(long esp, long error_code)
 	die("reserved (15,17-47) error",esp,error_code);
 }
 
-void trap_init(void)
+void trap_init(void) //trap是异常,都与IDT表有关
 {
 	int i;
 
+	// (号,函数地址)
 	set_trap_gate(0,&divide_error);
 	set_trap_gate(1,&debug);
 	set_trap_gate(2,&nmi);

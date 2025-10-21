@@ -54,11 +54,11 @@ long rd_init(long mem_start, int length)
 	int	i;
 	char	*cp;
 
-	blk_dev[MAJOR_NR].request_fn = DEVICE_REQUEST;
+	blk_dev[MAJOR_NR].request_fn = DEVICE_REQUEST;//MAJOR_NR 1 是struct blk_dev_struct blk_dev[NR_BLK_DEV] 中第一项: ramdisk// 任务1请求项处理函数挂上
 	rd_start = (char *) mem_start;
 	rd_length = length;
 	cp = rd_start;
-	for (i=0; i < length; i++)
+	for (i=0; i < length; i++)// 任务2 把虚拟盘内存清0
 		*cp++ = '\0';
 	return(length);
 }
