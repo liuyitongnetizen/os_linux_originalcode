@@ -21,10 +21,15 @@ __asm__ ("movl %%esp,%%eax\n\t" \
 
 // 嵌入汇编 d:edx,32位(田字格好记)带来了地址指针(!!!在IDT那个图和田字格类似哦) a:eax
 /** 
+ * IDT在内存中, 借助寄存器edx和eax来设置IDT表项(田字格)
  * edx低16位(地址低16位) 给eax低16位
  * %1 是IDT表项地址
  * 看笔记图
-*/
+ * gate_addr: IDT表项地址,IDT是中断描述符表
+ * 对于除零错误idt[0], IDT图中 此时段选择符是8(jumpi 0 8), 是“a" 0x00080000
+ * "i" 设置 IDT表项(第二行),给edx低16位赋值
+ * 总结: 设置IDT表项
+ */
 #define _set_gate(gate_addr,type,dpl,addr) \
 __asm__ ("movw %%dx,%%ax\n\t" \ 
 	"movw %0,%%dx\n\t" \
@@ -39,7 +44,13 @@ __asm__ ("movw %%dx,%%ax\n\t" \
 #define set_intr_gate(n,addr) \
 	_set_gate(&idt[n],14,0,addr)
 
-//15: f=1111
+/**15: f=1111。
+ * CPL code privilege level ,指令本身所在段的特权级
+ * DPL descriptor privilege level, 
+ * RPL requestor privilege level 
+ * jmpi 0 8; 8=1000=代码段描述符,低位00是RPL requestor privilege level
+ * 看书CPL DPL RPL
+ */
 #define set_trap_gate(n,addr) \
 	_set_gate(&idt[n],15,0,addr)
 

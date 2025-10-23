@@ -200,7 +200,8 @@ end_move:
 	// 8 !!!看成 01000(b)) 低位00:pl 特权级是0; 第3位 0表示GDT/LDT, 第4位:1代表第2项,(第1项是Null,第2项是代码段,第3项)(图—)
 	// 保护模式已经打开, 现在是32位, 段要用GDT,
 	// GDT表格式:在书上有
-	// setup.s 四个扇区 90200,  代码段限长8MB , setup.s head.s 都在这段
+	// setup.s 四个扇区 90200,  代码段限长8MB , setup.s head.s 都在这段, 代码位置在0特权位置
+	// 这个代码在90200低位
 
 ! This routine checks that the keyboard command queue is empty
 ! No timeout is used - if this hangs there is something wrong with

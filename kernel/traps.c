@@ -178,12 +178,12 @@ void do_reserved(long esp, long error_code)
 	die("reserved (15,17-47) error",esp,error_code);
 }
 
-void trap_init(void) //trap是异常,都与IDT表有关
+void trap_init(void) //trap是异常,都与IDT表(看图)有关
 {
 	int i;
 
-	// (号,函数地址)
-	set_trap_gate(0,&divide_error);
+	// (号,服务程序地址函数声明)
+	set_trap_gate(0,&divide_error);// 除0错误
 	set_trap_gate(1,&debug);
 	set_trap_gate(2,&nmi);
 	set_system_gate(3,&int3);	/* int3-5 can be called from all */
@@ -200,10 +200,10 @@ void trap_init(void) //trap是异常,都与IDT表有关
 	set_trap_gate(14,&page_fault);
 	set_trap_gate(15,&reserved);
 	set_trap_gate(16,&coprocessor_error);
-	for (i=17;i<48;i++)
+	for (i=17;i<48;i++)// 后续补
 		set_trap_gate(i,&reserved);
-	set_trap_gate(45,&irq13);
+	set_trap_gate(45,&irq13);// 
 	outb_p(inb_p(0x21)&0xfb,0x21);
 	outb(inb_p(0xA1)&0xdf,0xA1);
-	set_trap_gate(39,&parallel_interrupt);
+	set_trap_gate(39,&parallel_interrupt);// 并口(以前机器)
 }
