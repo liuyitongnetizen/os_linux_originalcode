@@ -50,11 +50,13 @@ extern void mem_use(void);
 extern int timer_interrupt(void);
 extern int system_call(void);
 
+// 占4K
 union task_union {
-	struct task_struct task;
-	char stack[PAGE_SIZE];
+	struct task_struct task;//1K 左右
+	char stack[PAGE_SIZE];//4K, 内核栈,一个进程一个
 };
 
+// 全局union 变量,初始化task,对应的是tast_struct 
 static union task_union init_task = {INIT_TASK,};
 
 long volatile jiffies=0;
@@ -386,11 +388,12 @@ void sched_init(void)
 {
 	int i;
 	struct desc_struct * p;
+	// GDT 表(图) : 
 
 	if (sizeof(struct sigaction) != 16)
 		panic("Struct sigaction MUST be 16 bytes");
-	set_tss_desc(gdt+FIRST_TSS_ENTRY,&(init_task.task.tss));
-	set_ldt_desc(gdt+FIRST_LDT_ENTRY,&(init_task.task.ldt));
+	set_tss_desc(gdt+FIRST_TSS_ENTRY,&(init_task.task.tss));// GDT表中, 进程0TSS初始化(图)
+	set_ldt_desc(gdt+FIRST_LDT_ENTRY,&(init_task.task.ldt));// 进程LDT初始化(图) TSS地址+1(每个进程是有TSS+LDT)
 	p = gdt+2+FIRST_TSS_ENTRY;
 	for(i=1;i<NR_TASKS;i++) {
 		task[i] = NULL;

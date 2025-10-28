@@ -74,18 +74,18 @@ struct tss_struct {
 	long	trace_bitmap;	/* bits: trace 0, bitmap 16-31 */
 	struct i387_struct i387;
 };
-
+// 最重要的数据结构, 进程的数据结构(不到1K)
 struct task_struct {
 /* these are hardcoded - don't touch */
-	long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
-	long counter;
+	long state;	/* -1 unrunnable, 0 runnable 就绪态, >0 stopped */
+	long counter;//时间片
 	long priority;
 	long signal;
 	struct sigaction sigaction[32];
 	long blocked;	/* bitmap of masked signals */
 /* various fields */
 	int exit_code;
-	unsigned long start_code,end_code,end_data,brk,start_stack;
+	unsigned long start_code,end_code,end_data,brk,start_stack;// 各种段地址,线性地址
 	long pid,father,pgrp,session,leader;
 	unsigned short uid,euid,suid;
 	unsigned short gid,egid,sgid;
@@ -99,9 +99,9 @@ struct task_struct {
 	struct m_inode * root;
 	struct m_inode * executable;
 	unsigned long close_on_exec;
-	struct file * filp[NR_OPEN];
+	struct file * filp[NR_OPEN];//文件描述符数组,能打开的文件数20(fopen返回的文件句柄下标就是这个)
 /* ldt for this task 0 - zero 1 - cs 2 - ds&ss */
-	struct desc_struct ldt[3];
+	struct desc_struct ldt[3];//3个ldt,3写死了,就是进程3不能访问进程5那个原因
 /* tss for this task */
 	struct tss_struct tss;
 };
@@ -109,6 +109,8 @@ struct task_struct {
 /*
  *  INIT_TASK is used to set up the first task table, touch at
  * your own risk!. Base=0, limit=0x9ffff (=640kB)
+ * task[0] 的所有字段初始化, 内核第一个进程
+ * 计算: ldt的值!!!!
  */
 #define INIT_TASK \
 /* state etc */	{ 0,15,15, \
