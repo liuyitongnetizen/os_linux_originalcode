@@ -53,7 +53,7 @@ extern int system_call(void);
 // 占4K
 union task_union {
 	struct task_struct task;//1K 左右
-	char stack[PAGE_SIZE];//4K, 内核栈,一个进程一个
+	char stack[PAGE_SIZE];//4K, 内核栈一个进程一个,内核代码一份, 一个进程一个,不会冲掉task_struct因为内核代码固定大小
 };
 
 // 全局union 变量,初始化task,对应的是tast_struct 
@@ -396,7 +396,7 @@ void sched_init(void)
 	set_ldt_desc(gdt+FIRST_LDT_ENTRY,&(init_task.task.ldt));// 进程LDT初始化(图) TSS地址+1(每个进程是有TSS+LDT)
 	p = gdt+2+FIRST_TSS_ENTRY;
 	for(i=1;i<NR_TASKS;i++) {
-		task[i] = NULL;
+		task[i] = NULL;// task[i]是指向进程i的task_struct指针数组(实际是指向union task_union的task_struct部分);调度时用轮询轮这个数组
 		p->a=p->b=0;
 		p++;
 		p->a=p->b=0;
@@ -404,12 +404,12 @@ void sched_init(void)
 	}
 /* Clear NT, so that we won't have troubles with that later on */
 	__asm__("pushfl ; andl $0xffffbfff,(%esp) ; popfl");
-	ltr(0);
-	lldt(0);
+	ltr(0);// 载入任务寄存器,进程0的TSS
+	lldt(0);// 载入进程0的LDT
 	outb_p(0x36,0x43);		/* binary, mode 3, LSB/MSB, ch 0 */
 	outb_p(LATCH & 0xff , 0x40);	/* LSB */
 	outb(LATCH >> 8 , 0x40);	/* MSB */
 	set_intr_gate(0x20,&timer_interrupt);
 	outb(inb_p(0x21)&~0x01,0x21);
-	set_system_gate(0x80,&system_call);
+	set_system_gate(0x80,&system_call);// 系统调用中断向量0x80
 }

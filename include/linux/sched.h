@@ -111,6 +111,7 @@ struct task_struct {
  * your own risk!. Base=0, limit=0x9ffff (=640kB)
  * task[0] 的所有字段初始化, 内核第一个进程
  * 计算: ldt的值!!!!
+ * 
  */
 #define INIT_TASK \
 /* state etc */	{ 0,15,15, \
