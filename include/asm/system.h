@@ -1,11 +1,22 @@
+//人工模仿 硬件中断压栈,此时iret前是boot阶段无进程,内核栈特殊脱离了进程, (真正内核栈4KB,依附于进程)假定之前有过3特权级中断(iret 前是0特权级),现在要切换到3特权级
+// iret前那个内核栈是给0特权级用的,现在要切换到3特权级,所以要新建一个内核栈给3特权级用,但是现在还没进程,所以用iret前的栈直接复用,从boot开始用这个栈直到这里的iret前没动过这个user_stack
+// user_stack在boot阶段,内核栈需要依附进程,但是boot阶段没进程,所以假定了一个
+//user_stack :大部分时间用在3特权进程0 而不是boot阶段
+//ss  0x17=0001 0111。11:3 LDT
+/*esp, user_stack 内核栈, */
+//eflags
+//*  0x0f=0000 1111。11:3 LDT。  cs*/
+//eip
+// 先push到eax 因为后续push操作会改变esp
+// 这段实现启动进程0 ,必须是进程0 ,因为sched_init里初始化的init_task就是进程0
 #define move_to_user_mode() \
 __asm__ ("movl %%esp,%%eax\n\t" \
 	"pushl $0x17\n\t" \
-	"pushl %%eax\n\t" \
-	"pushfl\n\t" \
-	"pushl $0x0f\n\t" \
-	"pushl $1f\n\t" \
-	"iret\n" \
+	"pushl %%eax\n\t" \ 
+	"pushfl\n\t" \		
+	"pushl $0x0f\n\t" \ 
+	"pushl $1f\n\t" \	
+	"iret\n" \  
 	"1:\tmovl $0x17,%%eax\n\t" \
 	"movw %%ax,%%ds\n\t" \
 	"movw %%ax,%%es\n\t" \

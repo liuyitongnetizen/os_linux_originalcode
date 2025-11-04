@@ -345,9 +345,9 @@ struct buffer_head * breada(int dev,int first, ...)
 	return (NULL);
 }
 
-void buffer_init(long buffer_end)
+void buffer_init(long buffer_end)//参数是缓冲区结束地址
 {
-	struct buffer_head * h = start_buffer;
+	struct buffer_head * h = start_buffer;// start_buffer是buffer头
 	void * b;
 	int i;
 
@@ -355,7 +355,7 @@ void buffer_init(long buffer_end)
 		b = (void *) (640*1024);
 	else
 		b = (void *) buffer_end;
-	while ( (b -= BLOCK_SIZE) >= ((void *) (h+1)) ) {
+	while ( (b -= BLOCK_SIZE) >= ((void *) (h+1)) ) {//初始化双向环形链表
 		h->b_dev = 0;
 		h->b_dirt = 0;
 		h->b_count = 0;
@@ -376,6 +376,6 @@ void buffer_init(long buffer_end)
 	free_list = start_buffer;
 	free_list->b_prev_free = h;
 	h->b_next_free = free_list;
-	for (i=0;i<NR_HASH;i++)
+	for (i=0;i<NR_HASH;i++)// 初始化哈希表
 		hash_table[i]=NULL;
 }	
