@@ -64,22 +64,25 @@ int copy_mem(int nr,struct task_struct * p)
  *  Ok, this is the main fork-routine. It copies the system process
  * information (task[nr]) and sets up the necessary registers. It
  * also copies the data segment in it's entirety.
+ * nr=1,第二个,是进程1,
  */
-int copy_process(int nr,long ebp,long edi,long esi,long gs,long none,
+int copy_process(int nr,long ebp,long edi,long esi,long gs,long none,// none是call引起的
 		long ebx,long ecx,long edx,
 		long fs,long es,long ds,
-		long eip,long cs,long eflags,long esp,long ss)
+		long eip,long cs,long eflags,long esp,long ss)//int80 fork 压栈,参数右序进栈
 {
 	struct task_struct *p;
 	int i;
 	struct file *f;
 
-	p = (struct task_struct *) get_free_page();
+	p = (struct task_struct *) get_free_page();//指针只管指向的类型的大小, 从刚开始的一个页,强制转成task_struct指针,比一个页小
 	if (!p)
 		return -EAGAIN;
-	task[nr] = p;
-	*p = *current;	/* NOTE! this doesn't copy the supervisor stack */
-	p->state = TASK_UNINTERRUPTIBLE;
+	task[nr] = p;//task[1]=p
+	*p = *current;	/* NOTE! this doesn't copy the supervisor stack  当前current是进程0, 看图11.6,这一句是p0的task_struct head给进程1的head*/
+	// 上面这一句, 子进程有了父进程 的代码,数据段,打开文件,当前是就绪态等信息
+	//下面是设置子进程
+	p->state = TASK_UNINTERRUPTIBLE;//子进程挂起
 	p->pid = last_pid;
 	p->father = current->pid;
 	p->counter = p->priority;
@@ -92,9 +95,9 @@ int copy_process(int nr,long ebp,long edi,long esi,long gs,long none,
 	p->tss.back_link = 0;
 	p->tss.esp0 = PAGE_SIZE + (long) p;
 	p->tss.ss0 = 0x10;
-	p->tss.eip = eip;
+	p->tss.eip = eip; //int80的下一行,用户代码,fork下一行; 子进程是从int80下一行开始???
 	p->tss.eflags = eflags;
-	p->tss.eax = 0;
+	p->tss.eax = 0; //
 	p->tss.ecx = ecx;
 	p->tss.edx = edx;
 	p->tss.ebx = ebx;

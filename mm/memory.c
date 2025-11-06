@@ -59,8 +59,9 @@ static unsigned char mem_map [ PAGING_PAGES ] = {0,};//数组元素数 = 页数,
 /*
  * Get physical address of first (actually last :-) free page, and mark it
  * used. If no free pages left, return 0.
+ * 线性页
  */
-unsigned long get_free_page(void)
+unsigned long get_free_page(void)//自己看, 0特权 7  已经分过页了在 setup_paging:, 从高往低地址找空页,第一次从16M内存顶端开始
 {
 register unsigned long __res asm("ax");
 

@@ -77,21 +77,21 @@ reschedule:
 	pushl $ret_from_sys_call
 	jmp _schedule
 .align 2
-_system_call:
-	cmpl $nr_system_calls-1,%eax
+_system_call: //int80到这,eax=2 创建第一个进程
+	cmpl $nr_system_calls-1,%eax //11.6图,  NR:通过eax 因为是3特权到1特权; 判断是否是系统调用(0-72)
 	ja bad_sys_call
-	push %ds
+	push %ds  //int80压栈紧跟着6个压进去 copy_process函数(顺序, eax对应NR)
 	push %es
 	push %fs
 	pushl %edx
 	pushl %ecx		# push %ebx,%ecx,%edx as parameters
 	pushl %ebx		# to the system call
-	movl $0x10,%edx		# set up ds,es to kernel space
+	movl $0x10,%edx		# set up ds,es to kernel  //Ox10 内核数据段,Ox08 内核代码段
 	mov %dx,%ds
 	mov %dx,%es
-	movl $0x17,%edx		# fs points to local data space
+	movl $0x17,%edx		# fs points to local data space //17:用户数据段
 	mov %dx,%fs
-	call _sys_call_table(,%eax,4)
+	call _sys_call_table(,%eax,4) //// copy_process函数(none是这个call引起的)
 	pushl %eax
 	movl _current,%eax
 	cmpl $0,state(%eax)		# state
@@ -206,14 +206,14 @@ _sys_execve:
 
 .align 2
 _sys_fork:
-	call _find_empty_process
+	call _find_empty_process //找task[]中空位, 每个task 指向一个task_struct,, 这个地方也压了栈但被清了, 对应// copy_process函数none前
 	testl %eax,%eax
 	js 1f
 	push %gs
 	pushl %esi
 	pushl %edi
 	pushl %ebp
-	pushl %eax
+	pushl %eax // copy_process函数(顺序, eax对应NR),eax现在是_find_empty_process的返回值
 	call _copy_process
 	addl $20,%esp
 1:	ret
