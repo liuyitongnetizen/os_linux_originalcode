@@ -141,7 +141,7 @@ void main(void)		/* This really IS void, no error here. */
 	hd_init();
 	floppy_init();
 	sti();//开启中断
-	move_to_user_mode();// 切换到用户态,后面是进程0的3特权
+	move_to_user_mode();// 切换到用户态,后面是进程0的3特权; 就地切换在内存中位置不变(进程0和内核代码数据在同一内存空间)
 	if (!fork()) {		/* we count on this going ok */
 		init();
 	}
