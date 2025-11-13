@@ -21,7 +21,7 @@ SYSSIZE = 0x3000
 ! The loader has been made as simple as possible, and continuos
 ! read errors will result in a unbreakable loop. Reboot by hand. It
 ! loads pretty fast by getting whole sectors at a time whenever possible.
-
+! 下面代码体现bootsect对于内存的规划
 .globl begtext, begdata, begbss, endtext, enddata, endbss
 .text
 begtext:
@@ -32,7 +32,7 @@ begbss:
 .text
 
 SETUPLEN = 4					! nr of setup-sectors
-BOOTSEG  = 0x07c0			! original address of boot-sector
+BOOTSEG  = 0x07c0			! original address of boot-sector (Ox07c00)
 INITSEG  = 0x9000			! we move boot here - out of the way
 SETUPSEG = 0x9020			! setup starts here
 SYSSEG   = 0x1000			! system loaded at 0x10000 (65536).
@@ -41,6 +41,8 @@ ENDSEG   = SYSSEG + SYSSIZE		! where to stop loading
 ! ROOT_DEV:	0x000 - same type of floppy as boot.
 !		0x301 - first partition on first drive etc
 ROOT_DEV = 0x306
+
+
 // bios 
 entry start
 start:
