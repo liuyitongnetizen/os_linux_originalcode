@@ -134,6 +134,13 @@ int sys_setup(void * BIOS)
 		hd[i*5].nr_sects = 0;
 	}
 	for (drive=0 ; drive<NR_HD ; drive++) {
+		/**
+		 * 块是OS概念
+		 * bread 先去缓冲区, 再去硬盘,再拿到缓冲区
+		 * bread(dev逻辑设备号,block块号) 
+		 * Ox300:blk_dev相关联; 
+		 * 0:是一个分区中的引导块(引导块,超级块, i节点位图...)
+		 */
 		if (!(bh = bread(0x300 + drive*5,0))) {
 			printk("Unable to read partition table of drive %d\n\r",
 				drive);

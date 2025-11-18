@@ -95,7 +95,7 @@ int copy_process(int nr,long ebp,long edi,long esi,long gs,long none,// none是c
 	p->tss.back_link = 0;
 	p->tss.esp0 = PAGE_SIZE + (long) p;
 	p->tss.ss0 = 0x10;
-	p->tss.eip = eip; //int80的下一行,用户代码,fork下一行; 子进程是从int80下一行开始???
+	p->tss.eip = eip; //syscall0 - fork 的int80的下一行,用户代码,fork下一行; 子进程是从int80下一行开始???
 	p->tss.eflags = eflags;
 	p->tss.eax = 0; //
 	p->tss.ecx = ecx;

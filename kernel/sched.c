@@ -128,12 +128,15 @@ void schedule(void)
 		next = 0;
 		i = NR_TASKS;
 		p = &task[NR_TASKS];
-		while (--i) {
+		while (--i) {//减到0时,不会遍历到进程0
 			if (!*--p)
 				continue;
 			if ((*p)->state == TASK_RUNNING && (*p)->counter > c)
 				c = (*p)->counter, next = i;
 		}
+		/**c = 0假 是所有就绪态进程全为0,if语句中 (*p)->counter > c,能走到if里面,刷一遍; 
+		 * c=-1 是真,next = 0, 全挂起唤醒进程0(next),不符合if左边(*p)->state == TASK_RUNNING
+		*/
 		if (c) break;
 		for(p = &LAST_TASK ; p > &FIRST_TASK ; --p)
 			if (*p)
