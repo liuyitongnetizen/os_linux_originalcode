@@ -66,24 +66,24 @@ static void add_request(struct blk_dev_struct * dev, struct request * req)
 {
 	struct request * tmp;
 
-	req->next = NULL;
-	cli();
+	req->next = NULL;	// 从新请求项初始化,脱出来
+	cli();//	 关闭中断
 	if (req->bh)
 		req->bh->b_dirt = 0;
-	if (!(tmp = dev->current_request)) {
+	if (!(tmp = dev->current_request)) { // 挑大旗,设备当前没有请求项,新建,否则插入链表(rd,hd分开链表)
 		dev->current_request = req;
-		sti();
-		(dev->request_fn)();
+		sti(); //开中断
+		(dev->request_fn)();//do—hd_request()函数
 		return;
 	}
-	for ( ; tmp->next ; tmp=tmp->next)
+	for ( ; tmp->next ; tmp=tmp->next) // 电梯调度算法插入请求
 		if ((IN_ORDER(tmp,req) ||
 		    !IN_ORDER(tmp,tmp->next)) &&
 		    IN_ORDER(req,tmp->next))
 			break;
 	req->next=tmp->next;
 	tmp->next=req;
-	sti();
+	sti();// 开中断
 }
 
 static void make_request(int major,int rw, struct buffer_head * bh)
@@ -114,15 +114,15 @@ repeat:
  * of the requests are only for reads.
  */
 	if (rw == READ)
-		req = request+NR_REQUEST;
+		req = request+NR_REQUEST;// 读,从requset数组末尾开始找空闲请求,读着急要优先OS考虑, 提高读找请求项成功的概率, 所以从后往前找
 	else
-		req = request+((NR_REQUEST*2)/3);
-/* find an empty request */
+		req = request+((NR_REQUEST*2)/3);// 写,从request数组中间开始找空闲请求,
+/* find an empty request 找到了空闲请求项*/
 	while (--req >= request)
-		if (req->dev<0)
+		if (req->dev<0) //dev初始化为-1,表示空闲(blk_dev_init函数)
 			break;
 /* if none found, sleep on new requests: check for rw_ahead */
-	if (req < request) {
+	if (req < request) {// 没有找到空闲请求项
 		if (rw_ahead) {
 			unlock_buffer(bh);
 			return;
@@ -134,7 +134,7 @@ repeat:
 	req->dev = bh->b_dev;
 	req->cmd = rw;
 	req->errors=0;
-	req->sector = bh->b_blocknr<<1;
+	req->sector = bh->b_blocknr<<1;//一个块1K=2个扇区
 	req->nr_sectors = 2;
 	req->buffer = bh->b_data;
 	req->waiting = NULL;
@@ -161,7 +161,7 @@ void blk_dev_init(void)
 	int i;
 
 	for (i=0 ; i<NR_REQUEST ; i++) {
-		request[i].dev = -1;
+		request[i].dev = -1; //-1表示空闲,初始化为-1
 		request[i].next = NULL;
 	}
 }
