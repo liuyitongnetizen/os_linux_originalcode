@@ -147,6 +147,7 @@ void ll_rw_block(int rw, struct buffer_head * bh)
 {
 	unsigned int major;
 
+	// Ox300>>8 = 3 硬盘, 本质判断是否是合法设备
 	if ((major=MAJOR(bh->b_dev)) >= NR_BLK_DEV ||
 	!(blk_dev[major].request_fn)) {
 		printk("Trying to read nonexistent block-device\n\r");

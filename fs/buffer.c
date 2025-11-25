@@ -220,7 +220,7 @@ repeat:
 				break;
 		}
 /* and repeat until we find something good */
-	} while ((tmp = tmp->b_next_free) != free_list);
+	} while ((tmp = tmp->b_next_free) != free_list);//蓝线找空闲
 	if (!bh) {
 		sleep_on(&buffer_wait);
 		goto repeat;
@@ -242,7 +242,7 @@ repeat:
 /* and that it's unused (b_count=0), unlocked (b_lock=0), and clean */
 	bh->b_count=1;
 	bh->b_dirt=0;
-	bh->b_uptodate=0;
+	bh->b_uptodate=0;	//在当前操作条件下, 操作缓冲块和硬盘块是否等效
 	remove_from_queues(bh);
 	bh->b_dev=dev;
 	bh->b_blocknr=block;
